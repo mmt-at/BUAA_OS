@@ -9,6 +9,7 @@ nop
 	mtc0	a0,CP0_ENTRYHI
 	nop
 	// insert tlbp or tlbwi
+	tlbp
 	nop
 	nop
 	nop

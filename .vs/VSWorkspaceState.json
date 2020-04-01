@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\boot",
+    "\\drivers",
+    "\\drivers\\gxconsole",
+    "\\gxemul",
+    "\\include",
+    "\\init"
+  ],
+  "SelectedNode": "\\init\\main.c",
+  "PreviewInSolutionExplorer": false
+}

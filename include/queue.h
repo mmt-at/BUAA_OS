@@ -110,7 +110,19 @@
  */
 
 
-#define LIST_INSERT_AFTER(listelm, elm, field)
+#define LIST_INSERT_AFTER(listelm, elm, field) do{                      \
+                if(((elm)->field.le_next=(listelm)->field.le_next)!=NULL){                      \
+                        (listelm)->field.le_next->field.le_prev=&((listelm)->field.le_next);     \
+                }                                                                               \
+                (elm)->field.le_prev=&(LIST_NEXT((listelm),field));                             \
+                LIST_NEXT((listelm),field)=(elm);                                               \
+        }while(0)
+                // (elm)->field.le_prev=&((listrlm)->field.le_next);                  
+                // (elm)->field.le_next=(listelm)->field.le_next;                                 
+                // (listelm)->field.le_next->field.le_prev=&((listelm)->field.le_next);/*(elm)->field.le_next;*/
+                // or LIST_NEXT((listelm),field)->field.le_prev=&NEXT_LIST((listelm),field);
+                // (listelm)->field.le_next=(elm);
+                //(listelm)->field.le_next maybe NULL!!!
         // Note: assign a to b <==> a = b
         //Step 1, assign elm.next to listelem.next.
         //Step 2: Judge whether listelm.next is NULL, if not, then assign listelm.pre to a proper value.
@@ -146,9 +158,27 @@
  * The "field" name is the link element as above. You can refer to LIST_INSERT_HEAD.
  * Note: this function has big differences with LIST_INSERT_HEAD !
  */
-#define LIST_INSERT_TAIL(head, elm, field)
+#define LIST_INSERT_TAIL(head, elm, field) do{\
+        if(LIST_EMPTY((head))){\
+                LIST_INSERT_HEAD(head,elm,field);\
+        }else{\
+                LIST_FOREACH(LIST_NEXT((elm),field),head,field){\
+                        if(LIST_NEXT((elm),field)->field.le_next==NULL){\
+                                break;\
+                        }\
+                }\
+                LIST_NEXT(LIST_NEXT(elm,field),field)=elm;\
+                (elm)->field.le_prev=&(LIST_NEXT(elm,field)->field.le_next);\
+                LIST_NEXT(elm,field)=NULL;\
+        }\
+} while(0)
 /* finish your code here. */
-
+/*
+There is something cannot be solved, which is the type of p cannot defined.
+                void *p = LIST_NEXT((elm),field);
+                LIST_INSERT_AFTER(p,elm,field);\
+                
+                */
 
 #define LIST_NEXT(elm, field)   ((elm)->field.le_next)
 
