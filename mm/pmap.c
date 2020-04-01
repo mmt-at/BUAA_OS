@@ -57,17 +57,17 @@ static void *alloc(u_int n, u_int align, int clear)
         freemem = 0x80000000+(u_long)maxpa;
     }
 
-    /* Step 1: Round up `freemem` up to be aligned properly */
-    freemem = freemem - n;
     freemem = ROUNDDOWN(freemem, align);
+    freemem = freemem - n;
     alloced_mem = freemem;
 
     
     // We're out of memory, PANIC !!
-    if (freemem <= (u_long)end) {
+    if (freemem < (u_long)end) {
         panic("out of memorty\n");
         return (void *)-E_NO_MEM;
     }
+    
     if (clear) {
         bzero((void *)alloced_mem, n);
     }
