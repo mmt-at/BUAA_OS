@@ -15,6 +15,7 @@ Pde *boot_pgdir;
 
 struct Page *pages;
 static u_long freemem;
+static int var1;
 
 static struct Page_list page_free_list;	/* Free list of physical pages */
 
@@ -44,6 +45,7 @@ void mips_detect_memory()
 
    Post-Condition:
 	If we're out of memory, should panic, else return this address of memory we have allocated.*/
+
 static void *alloc(u_int n, u_int align, int clear)
 {
     extern char end[];
@@ -52,27 +54,22 @@ static void *alloc(u_int n, u_int align, int clear)
     /* Initialize `freemem` if this is the first time. The first virtual address that the
      * linker did *not* assign to any kernel code or global variables. */
     if (freemem == 0) {
-        freemem = (u_long)end;
+        freemem = 0x80000000+(u_long)maxpa;
     }
 
     /* Step 1: Round up `freemem` up to be aligned properly */
-    freemem = ROUND(freemem, align);
-
-    /* Step 2: Save current value of `freemem` as allocated chunk. */
+    freemem = freemem - n;
+    freemem = ROUNDDOWN(freemem, align);
     alloced_mem = freemem;
 
-    /* Step 3: Increase `freemem` to record allocation. */
-    freemem = freemem + n;
-
-    /* Step 4: Clear allocated chunk if parameter `clear` is set. */
-    if (clear) {
-        bzero((void *)alloced_mem, n);
-    }
-
+    
     // We're out of memory, PANIC !!
-    if (PADDR(freemem) >= maxpa) {
+    if (freemem <= (u_long)end) {
         panic("out of memorty\n");
         return (void *)-E_NO_MEM;
+    }
+    if (clear) {
+        bzero((void *)alloced_mem, n);
     }
 
     /* Step 5: return allocated chunk. */
@@ -188,7 +185,7 @@ void mips_vm_init()
   Hint:
 	Use `LIST_INSERT_HEAD` to insert something to list.*/
 void
-page_init(void)
+page_init(int mode)
 {
     /* Step 1: Initialize page_free_list. */
     /* Hint: Use macro `LIST_INIT` defined in include/queue.h. */
@@ -205,13 +202,39 @@ page_init(void)
         pages[i].pp_ref = 1;
     }
 
-    /* Step 4: Mark the other memory as free. */
-    for( i = n; i < npage; i++){
-        pages[i].pp_ref = 0;
-        LIST_INSERT_HEAD(&page_free_list,&pages[i],pp_link);
+    if(mode!=0){
+        for( i = npage-1; i >= n; i--){
+            pages[i].pp_ref = 0;
+            LIST_INSERT_HEAD(&page_free_list,&pages[i],pp_link);
+        }
+    }else{
+        for( i = n; i < npage; i++){
+            pages[i].pp_ref = 0;
+            LIST_INSERT_HEAD(&page_free_list,&pages[i],pp_link);
+        }
     }
+    
 }
 
+void get_page_status(int pa){
+    struct Page *pp;
+    struct Page *var;
+    int var2;
+    pp = pa2page(pa);
+    var1++;
+    if(pp->pp_ref==0){
+        LIST_FOREACH(var, &page_free_list, pp_link){
+            if(page2pa(pp) == page2pa(var)){
+                printf("times:%d,page status:%d\n",var1,1);
+                return ;
+            }
+        }
+        printf("times:%d,page status:%d\n",var1,2);
+        return ;
+    }else if(pp->pp_ref > 0){
+        printf("times:%d,page status:%d\n",var1,3);
+    }
+}
 /*Overview:
 	Allocates a physical page from free memory, and clear this page.
 

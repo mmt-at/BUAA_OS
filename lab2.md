@@ -276,7 +276,7 @@ pgdir_entryp是va对应的虚拟页面的页表所在页表页对应的页目录
     if((*pgdir_entryp) == 0){
         *ppte = 0;
     }else{
-        pgtable=(Pte \*)KADDR(PTE_ADDR(\*pgdir_entryp));
+        pgtable=(Pte *)KADDR(PTE_ADDR(*pgdir_entryp));
         *ppte = &pgtable[PTX(va)];
     }
     return 0;
